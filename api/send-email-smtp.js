@@ -7,12 +7,14 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_A
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 function sanitizeHtml(str) {
-  return str
+  if (!str) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
 }
 
 async function checkRateLimit(userId) {
@@ -43,13 +45,16 @@ module.exports = async function handler(req, res) {
 
 
 
-  if (!to) return res.status(400).json({ error: 'Missing recipient email (to)' });
-  if (!subject) return res.status(400).json({ error: 'Missing email subject' });
-  if (!content) return res.status(400).json({ error: 'Missing email content' });
-  if (!userId) return res.status(400).json({ error: 'Missing userId' });
-  if (!fromEmail) return res.status(400).json({ error: 'Missing sender email (fromEmail)' });
+  if (!to || typeof to !== 'string') return res.status(400).json({ error: 'Invalid recipient email' });
+  if (!subject || typeof subject !== 'string') return res.status(400).json({ error: 'Invalid email subject' });
+  if (!content || typeof content !== 'string') return res.status(400).json({ error: 'Invalid email content' });
+  if (!userId || typeof userId !== 'string') return res.status(400).json({ error: 'Invalid userId' });
+  if (!fromEmail || typeof fromEmail !== 'string') return res.status(400).json({ error: 'Invalid sender email' });
+  
+  if (subject.length > 200) return res.status(400).json({ error: 'Subject too long' });
+  if (content.length > 10000) return res.status(400).json({ error: 'Content too long' });
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   if (!emailRegex.test(to) || !emailRegex.test(fromEmail)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }

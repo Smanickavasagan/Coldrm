@@ -14,8 +14,12 @@ module.exports = async function handler(req, res) {
 
   const { password } = req.body;
 
-  if (!password) {
-    return res.status(400).json({ error: 'Password is required' });
+  if (!password || typeof password !== 'string') {
+    return res.status(400).json({ error: 'Invalid password' });
+  }
+  
+  if (password.length < 8 || password.length > 100) {
+    return res.status(400).json({ error: 'Password length must be between 8 and 100 characters' });
   }
 
   try {

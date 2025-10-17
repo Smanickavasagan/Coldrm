@@ -15,6 +15,12 @@ function getKey() {
 }
 
 function encrypt(text) {
+  if (!text || typeof text !== 'string') {
+    throw new Error('Invalid text to encrypt');
+  }
+  if (text.length > 1000) {
+    throw new Error('Text too long to encrypt');
+  }
   const key = getKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -24,10 +30,19 @@ function encrypt(text) {
 }
 
 function decrypt(text) {
+  if (!text || typeof text !== 'string') {
+    throw new Error('Invalid encrypted text');
+  }
   const key = getKey();
   const parts = text.split(':');
-  const iv = Buffer.from(parts.shift(), 'hex');
-  const encryptedText = parts.join(':');
+  if (parts.length !== 2) {
+    throw new Error('Invalid encrypted format');
+  }
+  const iv = Buffer.from(parts[0], 'hex');
+  if (iv.length !== 16) {
+    throw new Error('Invalid IV length');
+  }
+  const encryptedText = parts[1];
   const decipher = crypto.createDecipheriv(algorithm, key, iv);
   let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
   decrypted += decipher.final('utf8');

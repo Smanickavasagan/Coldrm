@@ -42,11 +42,26 @@ module.exports = async function handler(req, res) {
 
   const { name, email, reason, feedback, userEmail, userId } = req.body;
 
-  if (!name || !email || !reason || !feedback || !userId || !userEmail) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!name || typeof name !== 'string' || name.length > 100) {
+    return res.status(400).json({ error: 'Invalid name' });
+  }
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Invalid email' });
+  }
+  if (!reason || typeof reason !== 'string' || reason.length > 500) {
+    return res.status(400).json({ error: 'Invalid reason' });
+  }
+  if (!feedback || typeof feedback !== 'string' || feedback.length > 1000) {
+    return res.status(400).json({ error: 'Invalid feedback' });
+  }
+  if (!userId || typeof userId !== 'string') {
+    return res.status(400).json({ error: 'Invalid userId' });
+  }
+  if (!userEmail || typeof userEmail !== 'string') {
+    return res.status(400).json({ error: 'Invalid userEmail' });
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   if (!emailRegex.test(email) || !emailRegex.test(userEmail)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }

@@ -7,7 +7,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "cohere-ai": "^7.7.0",
     "lucide-react": "^0.294.0",
-    "nodemailer": "^6.9.8",
+    "nodemailer": "^7.0.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
