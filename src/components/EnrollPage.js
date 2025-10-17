@@ -39,12 +39,14 @@ const EnrollPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
           ...formData,
           userEmail: user.email,
           userId: user.id
-        })
+        }),
+        credentials: 'same-origin'
       });
 
       const result = await response.json();

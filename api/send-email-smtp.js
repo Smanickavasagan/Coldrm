@@ -32,13 +32,18 @@ async function checkRateLimit(userId) {
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  const requestedWith = req.headers['x-requested-with'];
+  if (requestedWith !== 'XMLHttpRequest') {
+    return res.status(403).json({ error: 'Forbidden' });
   }
 
   const { to, subject, content, contactName, fromName, fromCompany, fromEmail, userId } = req.body;
@@ -115,10 +120,11 @@ module.exports = async function handler(req, res) {
     const safeName = sanitizeHtml(fromName || 'User');
     const safeCompany = sanitizeHtml(fromCompany || 'Company');
     
-    // Replace CTA BEFORE sanitizing
-    const emailWithCTA = content.replace(/\[Let's Talk\]\((.*?)\)/g, 
-      `<a href="$1" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Let's Talk</a>`
-    );
+    // Replace CTA BEFORE sanitizing - sanitize URL
+    const emailWithCTA = content.replace(/\[Let's Talk\]\((.*?)\)/g, (match, url) => {
+      const sanitizedUrl = sanitizeHtml(url);
+      return `<a href="${sanitizedUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Let's Talk</a>`;
+    });
     
     // Now sanitize everything except the CTA button HTML
     const safeContent = emailWithCTA.replace(/<a href="(.*?)".*?>Let's Talk<\/a>/g, '___CTA_PLACEHOLDER___')
