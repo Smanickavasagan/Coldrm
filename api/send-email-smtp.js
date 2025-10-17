@@ -41,9 +41,13 @@ module.exports = async function handler(req, res) {
 
   const { to, subject, content, contactName, fromName, fromCompany, fromEmail, userId } = req.body;
 
-  if (!to || !subject || !content || !userId || !fromEmail) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
+  console.log('Received request:', { to, subject, fromEmail, userId, hasContent: !!content });
+
+  if (!to) return res.status(400).json({ error: 'Missing recipient email (to)' });
+  if (!subject) return res.status(400).json({ error: 'Missing email subject' });
+  if (!content) return res.status(400).json({ error: 'Missing email content' });
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+  if (!fromEmail) return res.status(400).json({ error: 'Missing sender email (fromEmail)' });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(to) || !emailRegex.test(fromEmail)) {
