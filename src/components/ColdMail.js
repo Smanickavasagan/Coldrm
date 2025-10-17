@@ -136,6 +136,10 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       let result;
       try {
         result = JSON.parse(text);
+        if (!response.ok) {
+          console.error('API Error Response:', result);
+          alert('API Error: ' + (result.error || text));
+        }
       } catch {
         console.error('Full server error:', text);
         alert('Server error: ' + text.substring(0, 500));
