@@ -129,11 +129,23 @@ module.exports = async function handler(req, res) {
 
     const safeName = sanitizeHtml(fromName || 'User');
     const safeCompany = sanitizeHtml(fromCompany || 'Company');
-    const safeContent = sanitizeHtml(content);
     
-    const emailWithCTA = safeContent.replace(/\[Let's Talk\]\((.*?)\)/g, 
+    // Replace CTA BEFORE sanitizing
+    const emailWithCTA = content.replace(/\[Let's Talk\]\((.*?)\)/g, 
       `<a href="$1" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Let's Talk</a>`
     );
+    
+    // Now sanitize everything except the CTA button HTML
+    const safeContent = emailWithCTA.replace(/<a href="(.*?)".*?>Let's Talk<\/a>/g, '___CTA_PLACEHOLDER___')
+      .split('___CTA_PLACEHOLDER___')
+      .map((part, i, arr) => {
+        if (i < arr.length - 1) {
+          const ctaMatch = emailWithCTA.match(/<a href="(.*?)".*?>Let's Talk<\/a>/g);
+          return sanitizeHtml(part) + (ctaMatch?.[i] || '');
+        }
+        return sanitizeHtml(part);
+      })
+      .join('');
 
     const mailOptions = {
       from: `"${safeName} from ${safeCompany}" <${fromEmail}>`,
@@ -143,7 +155,7 @@ module.exports = async function handler(req, res) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="white-space: pre-line; line-height: 1.6; color: #333; margin-bottom: 30px;">
-            ${emailWithCTA.replace(/\n/g, '<br>')}
+            ${safeContent.replace(/\n/g, '<br>')}
           </div>
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
             <p>Best regards,<br>
