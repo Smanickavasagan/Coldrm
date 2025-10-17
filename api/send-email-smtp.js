@@ -155,6 +155,7 @@ module.exports = async function handler(req, res) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="white-space: pre-line; line-height: 1.6; color: #333; margin-bottom: 30px;">
+            <p style="margin-bottom: 20px;"><strong>Hi ${sanitizeHtml(contactName || 'there')},</strong></p>
             ${safeContent.replace(/\n/g, '<br>')}
           </div>
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
