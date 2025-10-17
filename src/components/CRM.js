@@ -33,7 +33,8 @@ const CRM = ({ contacts, onContactsChange, maxContacts }) => {
     try {
       const dataToSave = {
         ...formData,
-        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : []
+        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+        follow_up_date: formData.follow_up_date || null
       };
 
       if (editingContact) {
