@@ -99,21 +99,24 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
   const sendRealEmail = async ({ to, subject, content, contactName, fromName, fromCompany, fromEmail }) => {
     try {
+      const payload = {
+        to,
+        subject,
+        content,
+        contactName,
+        fromName,
+        fromCompany,
+        fromEmail,
+        userId: userProfile?.id
+      };
+      console.log('Sending email with payload:', payload);
+      
       const response = await fetch('/api/send-email-smtp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          to,
-          subject,
-          content,
-          contactName,
-          fromName,
-          fromCompany,
-          fromEmail,
-          userId: userProfile.id
-        })
+        body: JSON.stringify(payload)
       });
 
       const text = await response.text();
