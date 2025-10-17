@@ -1,6 +1,5 @@
-const nodemailerModule = require('nodemailer');
-const nodemailer = nodemailerModule.default || nodemailerModule;
-console.log('Nodemailer loaded:', typeof nodemailer, typeof nodemailer?.createTransporter);
+const { createTransport } = require('nodemailer');
+console.log('createTransport loaded:', typeof createTransport);
 const { createClient } = require('@supabase/supabase-js');
 const { decrypt } = require('./crypto-utils');
 
@@ -99,7 +98,7 @@ module.exports = async function handler(req, res) {
       subject: subject
     });
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = createTransport({
       service: 'gmail',
       host: 'smtp.gmail.com',
       port: 465,
