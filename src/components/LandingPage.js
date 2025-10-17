@@ -103,28 +103,58 @@ const LandingPage = () => {
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white p-8 rounded-xl shadow-lg">
             <Users className="h-12 w-12 text-primary-500 mb-4" />
-            <h3 className="text-xl font-semibold mb-4">Manage Clients Easily</h3>
-            <p className="text-gray-600">
-              Simple CRM to organize your contacts. Add up to 20 contacts with notes, 
-              company info, and track email interactions.
-            </p>
+            <h3 className="text-xl font-semibold mb-4">Smart CRM</h3>
+            <ul className="text-gray-600 space-y-2 text-sm">
+              <li>✓ Manage up to 20 contacts</li>
+              <li>✓ Status pipeline (Lead → Prospect → Customer)</li>
+              <li>✓ Add tags & notes</li>
+              <li>✓ Follow-up reminders</li>
+              <li>✓ Email history tracking</li>
+              <li>✓ Search & filter contacts</li>
+            </ul>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-lg">
             <Mail className="h-12 w-12 text-primary-500 mb-4" />
-            <h3 className="text-xl font-semibold mb-4">Send Personalized Cold Emails</h3>
-            <p className="text-gray-600">
-              AI-powered email generation that sounds human. Send up to 15 emails 
-              with smart rate limiting to avoid spam filters.
-            </p>
+            <h3 className="text-xl font-semibold mb-4">Cold Email System</h3>
+            <ul className="text-gray-600 space-y-2 text-sm">
+              <li>✓ Send up to 15 emails</li>
+              <li>✓ Use your own Gmail account</li>
+              <li>✓ Personalized with receiver name</li>
+              <li>✓ CTA button tracking</li>
+              <li>✓ Rate limiting (1 email/min)</li>
+              <li>✓ Email delivery tracking</li>
+            </ul>
           </div>
           <div className="bg-white p-8 rounded-xl shadow-lg">
             <Zap className="h-12 w-12 text-primary-500 mb-4" />
-            <h3 className="text-xl font-semibold mb-4">Auto Contact Capture</h3>
-            <p className="text-gray-600">
-              Include CTA buttons in emails that automatically add interested 
-              recipients to your CRM when clicked.
-            </p>
+            <h3 className="text-xl font-semibold mb-4">Security & More</h3>
+            <ul className="text-gray-600 space-y-2 text-sm">
+              <li>✓ AES-256 password encryption</li>
+              <li>✓ Email confirmation</li>
+              <li>✓ Password reset</li>
+              <li>✓ Auto-interested tracking</li>
+              <li>✓ Secure SMTP sending</li>
+              <li>✓ Fast & responsive UI</li>
+            </ul>
           </div>
+        </div>
+      </section>
+
+      {/* MVP Limits */}
+      <section className="container mx-auto px-6 py-12">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-8 text-center">
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">MVP Limits</h3>
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <div className="bg-white p-6 rounded-lg">
+              <p className="text-4xl font-bold text-primary-500 mb-2">20</p>
+              <p className="text-gray-600">Contacts Maximum</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg">
+              <p className="text-4xl font-bold text-primary-500 mb-2">15</p>
+              <p className="text-gray-600">Cold Emails Maximum</p>
+            </div>
+          </div>
+          <p className="text-gray-600 mt-6">Perfect for testing and small campaigns!</p>
         </div>
       </section>
 
