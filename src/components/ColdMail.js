@@ -40,13 +40,16 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
     setSavingConfig(true);
     try {
+      // Remove spaces from password
+      const cleanPassword = emailPassword.replace(/\s/g, '');
+      
       // Encrypt password before storing
       const encryptResponse = await fetch('/api/encrypt-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ password: emailPassword })
+        body: JSON.stringify({ password: cleanPassword })
       });
 
       const { encryptedPassword } = await encryptResponse.json();
