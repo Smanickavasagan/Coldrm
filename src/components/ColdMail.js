@@ -42,6 +42,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
     try {
       // Remove spaces from password
       const cleanPassword = emailPassword.replace(/\s/g, '');
+      console.log('Saving email config for user:', userProfile?.id);
       
       // Encrypt password before storing
       const encryptResponse = await fetch('/api/encrypt-password', {
@@ -52,24 +53,33 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         body: JSON.stringify({ password: cleanPassword })
       });
 
-      const { encryptedPassword } = await encryptResponse.json();
+      const encryptResult = await encryptResponse.json();
+      console.log('Encryption response:', encryptResult);
+      
+      if (!encryptResult.encryptedPassword) {
+        throw new Error('Failed to encrypt password');
+      }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           email_provider: 'gmail',
-          encrypted_email_password: encryptedPassword,
+          encrypted_email_password: encryptResult.encryptedPassword,
           email_configured: true
         })
-        .eq('id', userProfile.id);
+        .eq('id', userProfile.id)
+        .select();
 
+      console.log('Supabase update result:', { data, error });
+      
       if (error) throw error;
       
       alert('Email configuration saved successfully!');
       setEmailPassword('');
       setShowEmailSetup(false);
-      getUserProfile();
+      await getUserProfile();
     } catch (error) {
+      console.error('Save config error:', error);
       alert('Error saving email configuration: ' + error.message);
     } finally {
       setSavingConfig(false);
