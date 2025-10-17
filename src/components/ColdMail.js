@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Send, Wand2, Clock, Settings, Trash2, Shield } from 'lucide-react';
+import { Send, Clock, Settings, Trash2, Shield } from 'lucide-react';
 
 const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [emailContent, setEmailContent] = useState('');
   const [businessInfo, setBusinessInfo] = useState('');
-  const [generating, setGenerating] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendingProgress, setSendingProgress] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
@@ -96,46 +95,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
     }
   };
 
-  const generateEmailContent = async () => {
-    if (!businessInfo.trim()) {
-      alert('Please enter your business information first');
-      return;
-    }
 
-    const cohereApiKey = process.env.REACT_APP_COHERE_API_KEY;
-    if (!cohereApiKey || cohereApiKey === 'your_cohere_api_key_here') {
-      alert('Please add your Cohere API key to the .env file');
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      const response = await fetch('https://api.cohere.ai/v1/generate', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${cohereApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'command',
-          prompt: `Write a natural, human-like cold email for the following business: ${businessInfo}\n\nThe email should:\n- Sound conversational and genuine, not robotic\n- Be brief and to the point (2-3 short paragraphs)\n- Include a soft call-to-action\n- Avoid spam words and overly salesy language\n- Feel like it's written by a real person\n\nEmail:`,
-          max_tokens: 200,
-          temperature: 0.7,
-        }),
-      });
-
-      const data = await response.json();
-      if (data.generations && data.generations[0]) {
-        setEmailContent(data.generations[0].text.trim());
-      } else {
-        alert('Error generating email: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      alert('Error generating email: ' + error.message);
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   const sendRealEmail = async ({ to, subject, content, contactName, fromName, fromCompany, fromEmail }) => {
     try {
@@ -367,19 +327,9 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
         {/* Email Content */}
         <div>
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Email Content
-            </label>
-            <button
-              onClick={generateEmailContent}
-              disabled={generating || sending}
-              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition disabled:opacity-50 flex items-center text-sm"
-            >
-              <Wand2 className="h-4 w-4 mr-2" />
-              {generating ? 'Generating...' : 'Generate with AI'}
-            </button>
-          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email Content
+          </label>
           <textarea
             value={emailContent}
             onChange={(e) => setEmailContent(e.target.value)}
