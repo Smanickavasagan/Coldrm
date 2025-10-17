@@ -14,9 +14,8 @@ function getKey() {
   return Buffer.from(encKey, 'utf8').slice(0, 32);
 }
 
-const key = getKey();
-
 function encrypt(text) {
+  const key = getKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
   let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -25,6 +24,7 @@ function encrypt(text) {
 }
 
 function decrypt(text) {
+  const key = getKey();
   const parts = text.split(':');
   const iv = Buffer.from(parts.shift(), 'hex');
   const encryptedText = parts.join(':');
