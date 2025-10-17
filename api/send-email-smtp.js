@@ -61,15 +61,14 @@ module.exports = async function handler(req, res) {
     }
 
     console.log('Querying profile for userId:', userId);
-    const { data: profile, error } = await supabaseClient
+    const { data: profiles, error } = await supabaseClient
       .from('profiles')
       .select('encrypted_email_password')
-      .eq('id', userId)
-      .single();
+      .eq('id', userId);
 
     console.log('Profile query result:', { 
-      hasProfile: !!profile, 
-      hasPassword: !!profile?.encrypted_email_password,
+      count: profiles?.length,
+      hasPassword: !!profiles?.[0]?.encrypted_email_password,
       error: error?.message 
     });
 
@@ -78,6 +77,7 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Database error: ' + error.message });
     }
     
+    const profile = profiles?.[0];
     if (!profile?.encrypted_email_password) {
       return res.status(400).json({ error: 'Email not configured in database' });
     }
