@@ -60,14 +60,26 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Rate limit exceeded. Maximum 5 emails per minute.' });
     }
 
+    console.log('Querying profile for userId:', userId);
     const { data: profile, error } = await supabaseClient
       .from('profiles')
       .select('encrypted_email_password')
       .eq('id', userId)
       .single();
 
-    if (error || !profile?.encrypted_email_password) {
-      return res.status(400).json({ error: 'Email not configured' });
+    console.log('Profile query result:', { 
+      hasProfile: !!profile, 
+      hasPassword: !!profile?.encrypted_email_password,
+      error: error?.message 
+    });
+
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(400).json({ error: 'Database error: ' + error.message });
+    }
+    
+    if (!profile?.encrypted_email_password) {
+      return res.status(400).json({ error: 'Email not configured in database' });
     }
 
     let decryptedPassword;
