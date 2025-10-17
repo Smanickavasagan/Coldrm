@@ -1,10 +1,6 @@
-let nodemailer;
-try {
-  nodemailer = require('nodemailer');
-  console.log('Nodemailer loaded:', typeof nodemailer, typeof nodemailer.createTransporter);
-} catch (e) {
-  console.error('Failed to load nodemailer:', e);
-}
+const nodemailerModule = require('nodemailer');
+const nodemailer = nodemailerModule.default || nodemailerModule;
+console.log('Nodemailer loaded:', typeof nodemailer, typeof nodemailer?.createTransporter);
 const { createClient } = require('@supabase/supabase-js');
 const { decrypt } = require('./crypto-utils');
 
