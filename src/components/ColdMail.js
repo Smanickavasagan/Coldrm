@@ -123,6 +123,8 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         userId: userProfile?.id
       };
       console.log('Sending email with payload:', JSON.stringify(payload, null, 2));
+      console.log('User profile email_configured:', userProfile?.email_configured);
+      console.log('User profile has encrypted password:', !!userProfile?.encrypted_email_password);
       
       const response = await fetch('/api/send-email-smtp', {
         method: 'POST',
