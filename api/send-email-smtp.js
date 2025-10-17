@@ -69,11 +69,16 @@ module.exports = async function handler(req, res) {
     const decryptedPassword = decrypt(profile.encrypted_email_password);
 
     const transporter = nodemailer.createTransporter({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
       auth: {
         user: fromEmail,
         pass: decryptedPassword,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const safeName = sanitizeHtml(fromName || 'User');
@@ -87,6 +92,7 @@ module.exports = async function handler(req, res) {
     const mailOptions = {
       from: `"${safeName} from ${safeCompany}" <${fromEmail}>`,
       to: to,
+      bcc: fromEmail,
       subject: sanitizeHtml(subject),
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -103,17 +109,32 @@ module.exports = async function handler(req, res) {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log('Email sent successfully:', {
+      messageId: info.messageId,
+      response: info.response,
+      to: to,
+      from: fromEmail
+    });
     
     res.status(200).json({ 
       success: true, 
-      message: 'Email sent successfully' 
+      message: 'Email sent successfully',
+      messageId: info.messageId
     });
   } catch (error) {
-    console.error('SMTP sending error:', error);
+    console.error('SMTP sending error:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response
+    });
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to send email' 
+      error: error.message || 'Failed to send email',
+      details: error.code
     });
   }
+}
 }
