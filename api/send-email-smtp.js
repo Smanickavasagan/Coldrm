@@ -69,10 +69,17 @@ module.exports = async function handler(req, res) {
     let decryptedPassword;
     try {
       decryptedPassword = decrypt(profile.encrypted_email_password);
+      console.log('Password decrypted successfully');
     } catch (decryptError) {
       console.error('Decryption error:', decryptError);
       return res.status(500).json({ error: 'Failed to decrypt password: ' + decryptError.message });
     }
+
+    console.log('Attempting to send email:', {
+      from: fromEmail,
+      to: to,
+      subject: subject
+    });
 
     const transporter = nodemailer.createTransporter({
       service: 'gmail',
@@ -91,7 +98,17 @@ module.exports = async function handler(req, res) {
     });
 
     // Verify connection
-    await transporter.verify();
+    console.log('Verifying SMTP connection...');
+    try {
+      await transporter.verify();
+      console.log('SMTP connection verified successfully');
+    } catch (verifyError) {
+      console.error('SMTP verification failed:', verifyError);
+      return res.status(500).json({ 
+        error: 'Gmail connection failed: ' + verifyError.message,
+        code: verifyError.code
+      });
+    }
 
     const safeName = sanitizeHtml(fromName || 'User');
     const safeCompany = sanitizeHtml(fromCompany || 'Company');
@@ -121,11 +138,14 @@ module.exports = async function handler(req, res) {
       `,
     };
 
+    console.log('Sending email now...');
     const info = await transporter.sendMail(mailOptions);
     
-    console.log('Email sent successfully:', {
+    console.log('✅ Email sent successfully:', {
       messageId: info.messageId,
       response: info.response,
+      accepted: info.accepted,
+      rejected: info.rejected,
       to: to,
       from: fromEmail
     });
