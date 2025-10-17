@@ -182,7 +182,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       for (let i = 0; i < selectedContacts.length; i++) {
         const contact = contacts.find(c => c.id === selectedContacts[i]);
         
-        const ctaLink = `${window.location.origin}/cta-clicked/${contact.id}`;
+        const ctaLink = `${window.location.origin}/api/cta-clicked?contactId=${contact.id}`;
         const emailWithCTA = emailContent + `\n\n[Let's Talk](${ctaLink})`;
 
         const result = await sendRealEmail({
