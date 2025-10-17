@@ -23,6 +23,10 @@ const Dashboard = () => {
     setUser(user);
   };
 
+  const isTestAccount = user?.email === 'manickavasagan022@gmail.com';
+  const maxContacts = isTestAccount ? 999999 : 20;
+  const maxEmails = isTestAccount ? 999999 : 15;
+
   const fetchContacts = async () => {
     const { data, error } = await supabase
       .from('contacts')
@@ -79,7 +83,7 @@ const Dashboard = () => {
               <Users className="h-8 w-8 text-primary-500 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Total Contacts</p>
-                <p className="text-2xl font-bold text-gray-800">{contacts.length}/20</p>
+                <p className="text-2xl font-bold text-gray-800">{contacts.length}/{isTestAccount ? '∞' : '20'}</p>
               </div>
             </div>
           </div>
@@ -88,7 +92,7 @@ const Dashboard = () => {
               <Mail className="h-8 w-8 text-primary-500 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Emails Sent</p>
-                <p className="text-2xl font-bold text-gray-800">{emailsSent}/15</p>
+                <p className="text-2xl font-bold text-gray-800">{emailsSent}/{isTestAccount ? '∞' : '15'}</p>
               </div>
             </div>
           </div>
@@ -126,7 +130,7 @@ const Dashboard = () => {
               <CRM 
                 contacts={contacts} 
                 onContactsChange={fetchContacts}
-                maxContacts={20}
+                maxContacts={maxContacts}
               />
             )}
             {activeTab === 'coldmail' && (
@@ -134,7 +138,7 @@ const Dashboard = () => {
                 contacts={contacts}
                 emailsSent={emailsSent}
                 onEmailSent={fetchEmailCount}
-                maxEmails={15}
+                maxEmails={maxEmails}
               />
             )}
           </div>
