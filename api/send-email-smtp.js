@@ -75,17 +75,23 @@ module.exports = async function handler(req, res) {
     }
 
     const transporter = nodemailer.createTransporter({
+      service: 'gmail',
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: {
         user: fromEmail,
         pass: decryptedPassword,
       },
       tls: {
-        rejectUnauthorized: false
-      }
+        rejectUnauthorized: true
+      },
+      debug: true,
+      logger: true
     });
+
+    // Verify connection
+    await transporter.verify();
 
     const safeName = sanitizeHtml(fromName || 'User');
     const safeCompany = sanitizeHtml(fromCompany || 'Company');
@@ -134,12 +140,22 @@ module.exports = async function handler(req, res) {
       message: error.message,
       code: error.code,
       command: error.command,
-      response: error.response
+      response: error.response,
+      responseCode: error.responseCode
     });
+    
+    let errorMessage = error.message || 'Failed to send email';
+    if (error.code === 'EAUTH') {
+      errorMessage = 'Gmail authentication failed. Please check your app password.';
+    } else if (error.code === 'ESOCKET') {
+      errorMessage = 'Connection to Gmail failed. Please try again.';
+    }
+    
     res.status(500).json({ 
       success: false, 
-      error: error.message || 'Failed to send email',
-      details: error.code
+      error: errorMessage,
+      code: error.code,
+      details: error.response
     });
   }
 }
