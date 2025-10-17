@@ -1,7 +1,20 @@
 const crypto = require('crypto');
 
 const algorithm = 'aes-256-cbc';
-const key = Buffer.from(process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32', 'utf8').slice(0, 32);
+
+function getKey() {
+  const encKey = process.env.ENCRYPTION_KEY;
+  if (!encKey) {
+    throw new Error('ENCRYPTION_KEY environment variable is not set');
+  }
+  // If it's a hex string (64 chars), convert from hex, otherwise use as utf8
+  if (encKey.length === 64) {
+    return Buffer.from(encKey, 'hex');
+  }
+  return Buffer.from(encKey, 'utf8').slice(0, 32);
+}
+
+const key = getKey();
 
 function encrypt(text) {
   const iv = crypto.randomBytes(16);

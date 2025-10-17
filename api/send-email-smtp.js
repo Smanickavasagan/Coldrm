@@ -66,7 +66,13 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Email not configured' });
     }
 
-    const decryptedPassword = decrypt(profile.encrypted_email_password);
+    let decryptedPassword;
+    try {
+      decryptedPassword = decrypt(profile.encrypted_email_password);
+    } catch (decryptError) {
+      console.error('Decryption error:', decryptError);
+      return res.status(500).json({ error: 'Failed to decrypt password: ' + decryptError.message });
+    }
 
     const transporter = nodemailer.createTransporter({
       host: 'smtp.gmail.com',
