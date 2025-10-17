@@ -42,7 +42,6 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
     try {
       // Remove spaces from password
       const cleanPassword = emailPassword.replace(/\s/g, '');
-      console.log('Saving email config for user:', userProfile?.id);
       
       // Encrypt password before storing
       const encryptResponse = await fetch('/api/encrypt-password', {
@@ -54,7 +53,6 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       });
 
       const encryptResult = await encryptResponse.json();
-      console.log('Encryption response:', encryptResult);
       
       if (!encryptResult.encryptedPassword) {
         throw new Error('Failed to encrypt password');
@@ -70,7 +68,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         .eq('id', userProfile.id)
         .select();
 
-      console.log('Supabase update result:', { data, error });
+
       
       if (error) throw error;
       
@@ -79,7 +77,6 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       setShowEmailSetup(false);
       await getUserProfile();
     } catch (error) {
-      console.error('Save config error:', error);
       alert('Error saving email configuration: ' + error.message);
     } finally {
       setSavingConfig(false);
@@ -122,9 +119,6 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         fromEmail,
         userId: userProfile?.id
       };
-      console.log('Sending email with payload:', JSON.stringify(payload, null, 2));
-      console.log('User profile email_configured:', userProfile?.email_configured);
-      console.log('User profile has encrypted password:', !!userProfile?.encrypted_email_password);
       
       const response = await fetch('/api/send-email-smtp', {
         method: 'POST',
@@ -139,17 +133,14 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       try {
         result = JSON.parse(text);
         if (!response.ok) {
-          console.error('API Error Response:', result);
           alert('API Error: ' + (result.error || text));
         }
       } catch {
-        console.error('Full server error:', text);
         alert('Server error: ' + text.substring(0, 500));
         return { success: false, error: text.substring(0, 200) };
       }
       return result;
     } catch (error) {
-      console.error('Email sending error:', error);
       return { success: false, error: error.message };
     }
   };

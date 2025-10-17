@@ -1,5 +1,4 @@
 const { createTransport } = require('nodemailer');
-console.log('createTransport loaded:', typeof createTransport);
 const { createClient } = require('@supabase/supabase-js');
 const { decrypt } = require('./crypto-utils');
 
@@ -42,7 +41,7 @@ module.exports = async function handler(req, res) {
 
   const { to, subject, content, contactName, fromName, fromCompany, fromEmail, userId } = req.body;
 
-  console.log('Received request:', { to, subject, fromEmail, userId, hasContent: !!content });
+
 
   if (!to) return res.status(400).json({ error: 'Missing recipient email (to)' });
   if (!subject) return res.status(400).json({ error: 'Missing email subject' });
@@ -61,20 +60,12 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'Rate limit exceeded. Maximum 5 emails per minute.' });
     }
 
-    console.log('Querying profile for userId:', userId);
     const { data: profiles, error } = await supabaseClient
       .from('profiles')
       .select('encrypted_email_password')
       .eq('id', userId);
 
-    console.log('Profile query result:', { 
-      count: profiles?.length,
-      hasPassword: !!profiles?.[0]?.encrypted_email_password,
-      error: error?.message 
-    });
-
     if (error) {
-      console.error('Database error:', error);
       return res.status(400).json({ error: 'Database error: ' + error.message });
     }
     
@@ -86,17 +77,9 @@ module.exports = async function handler(req, res) {
     let decryptedPassword;
     try {
       decryptedPassword = decrypt(profile.encrypted_email_password);
-      console.log('Password decrypted successfully');
     } catch (decryptError) {
-      console.error('Decryption error:', decryptError);
       return res.status(500).json({ error: 'Failed to decrypt password: ' + decryptError.message });
     }
-
-    console.log('Attempting to send email:', {
-      from: fromEmail,
-      to: to,
-      subject: subject
-    });
 
     const transporter = createTransport({
       service: 'gmail',
@@ -115,12 +98,9 @@ module.exports = async function handler(req, res) {
     });
 
     // Verify connection
-    console.log('Verifying SMTP connection...');
     try {
       await transporter.verify();
-      console.log('SMTP connection verified successfully');
     } catch (verifyError) {
-      console.error('SMTP verification failed:', verifyError);
       return res.status(500).json({ 
         error: 'Gmail connection failed: ' + verifyError.message,
         code: verifyError.code
@@ -168,17 +148,7 @@ module.exports = async function handler(req, res) {
       `,
     };
 
-    console.log('Sending email now...');
     const info = await transporter.sendMail(mailOptions);
-    
-    console.log('✅ Email sent successfully:', {
-      messageId: info.messageId,
-      response: info.response,
-      accepted: info.accepted,
-      rejected: info.rejected,
-      to: to,
-      from: fromEmail
-    });
     
     res.status(200).json({ 
       success: true, 
@@ -186,14 +156,6 @@ module.exports = async function handler(req, res) {
       messageId: info.messageId
     });
   } catch (error) {
-    console.error('SMTP sending error:', {
-      message: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
-    });
-    
     let errorMessage = error.message || 'Failed to send email';
     if (error.code === 'EAUTH') {
       errorMessage = 'Gmail authentication failed. Please check your app password.';
