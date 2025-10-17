@@ -122,7 +122,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         fromEmail,
         userId: userProfile?.id
       };
-      console.log('Sending email with payload:', payload);
+      console.log('Sending email with payload:', JSON.stringify(payload, null, 2));
       
       const response = await fetch('/api/send-email-smtp', {
         method: 'POST',
