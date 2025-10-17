@@ -138,8 +138,13 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       return;
     }
 
+    if (!businessInfo.trim()) {
+      alert('Please enter your business information');
+      return;
+    }
+
     if (!emailContent.trim()) {
-      alert('Please generate or write email content');
+      alert('Please write email content');
       return;
     }
 
@@ -173,11 +178,18 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
           fromEmail: userEmail
         });
         
+        if (!result.success) {
+          alert('Failed to send email to ' + contact.name + ': ' + result.error);
+          setSending(false);
+          setSendingProgress(null);
+          return;
+        }
+        
         await supabase.from('email_logs').insert([{
           contact_id: contact.id,
           subject: `Quick chat about ${businessInfo.split(' ')[0]}?`,
           content: emailWithCTA,
-          status: result.success ? 'sent' : 'failed'
+          status: 'sent'
         }]);
 
         setSendingProgress({ current: i + 1, total: selectedContacts.length });
