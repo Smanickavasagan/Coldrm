@@ -121,8 +121,9 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       try {
         result = JSON.parse(text);
       } catch {
-        console.error('Server error:', text);
-        return { success: false, error: 'Server error: ' + text.substring(0, 100) };
+        console.error('Full server error:', text);
+        alert('Server error: ' + text.substring(0, 500));
+        return { success: false, error: text.substring(0, 200) };
       }
       return result;
     } catch (error) {
