@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { showAlert } from './Alert';
 import { Mail, Lock, User } from 'lucide-react';
 
 const Auth = () => {
@@ -36,10 +37,10 @@ const Auth = () => {
           }
         });
         if (error) throw error;
-        setMessage('Check your email for verification link!');
+        showAlert('Check your email for verification link!', 'success');
       }
     } catch (error) {
-      setMessage(error.message);
+      showAlert(error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -53,10 +54,10 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
       if (error) throw error;
-      setMessage('Password reset email sent! Check your inbox.');
+      showAlert('Password reset email sent! Check your inbox.', 'success');
       setShowResetPassword(false);
     } catch (error) {
-      setMessage(error.message);
+      showAlert(error.message, 'error');
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { showAlert } from './Alert';
 import { Gift, ArrowLeft } from 'lucide-react';
 
 const EnrollPage = () => {
@@ -23,7 +24,7 @@ const EnrollPage = () => {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      alert('Please login to enroll');
+      showAlert('Please login to enroll', 'warning');
       navigate('/auth');
     } else {
       setUser(user);
@@ -71,14 +72,14 @@ const EnrollPage = () => {
       const result = await response.json();
       
       if (result.success) {
-        alert('Enrollment submitted successfully! We will contact you soon.');
+        showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
         navigate('/dashboard');
       } else {
-        alert('Error: ' + (result.error || 'Please try again.'));
+        showAlert('Error: ' + (result.error || 'Please try again.'), 'error');
       }
     } catch (error) {
       console.error('Enrollment error:', error);
-      alert('Network error: ' + error.message);
+      showAlert('Network error: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }

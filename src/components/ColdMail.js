@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { showAlert } from './Alert';
 import { Send, Clock, Settings, Trash2, Shield } from 'lucide-react';
 
 const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
@@ -34,7 +35,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
   const saveEmailConfig = async () => {
     if (!emailPassword.trim()) {
-      alert('Please enter your Gmail app password');
+      showAlert('Please enter your Gmail app password', 'warning');
       return;
     }
 
@@ -74,12 +75,12 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       
       if (error) throw error;
       
-      alert('Email configuration saved successfully!');
+      showAlert('Email configuration saved successfully!', 'success');
       setEmailPassword('');
       setShowEmailSetup(false);
       await getUserProfile();
     } catch (error) {
-      alert('Error saving email configuration: ' + error.message);
+      showAlert('Error saving email configuration: ' + error.message, 'error');
     } finally {
       setSavingConfig(false);
     }
@@ -100,10 +101,10 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
       if (error) throw error;
       
-      alert('Email configuration deleted successfully!');
+      showAlert('Email configuration deleted successfully!', 'success');
       getUserProfile();
     } catch (error) {
-      alert('Error deleting email configuration: ' + error.message);
+      showAlert('Error deleting email configuration: ' + error.message, 'error');
     }
   };
 
@@ -137,10 +138,10 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
       try {
         result = JSON.parse(text);
         if (!response.ok) {
-          alert('API Error: ' + (result.error || text));
+          showAlert('API Error: ' + (result.error || text), 'error');
         }
       } catch {
-        alert('Server error: ' + text.substring(0, 500));
+        showAlert('Server error: ' + text.substring(0, 500), 'error');
         return { success: false, error: text.substring(0, 200) };
       }
       return result;
@@ -151,27 +152,27 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
 
   const sendEmails = async () => {
     if (selectedContacts.length === 0) {
-      alert('Please select at least one contact');
+      showAlert('Please select at least one contact', 'warning');
       return;
     }
 
     if (!businessInfo.trim()) {
-      alert('Please enter your business information');
+      showAlert('Please enter your business information', 'warning');
       return;
     }
 
     if (!emailContent.trim()) {
-      alert('Please write email content');
+      showAlert('Please write email content', 'warning');
       return;
     }
 
     if (emailsSent + selectedContacts.length > maxEmails) {
-      alert(`This would exceed your limit of ${maxEmails} emails`);
+      showAlert(`This would exceed your limit of ${maxEmails} emails`, 'warning');
       return;
     }
 
     if (!userProfile?.email_configured) {
-      alert('Please configure your email settings first');
+      showAlert('Please configure your email settings first', 'warning');
       return;
     }
 
@@ -196,7 +197,7 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         });
         
         if (!result.success) {
-          alert('Failed to send email to ' + contact.name + ': ' + result.error);
+          showAlert('Failed to send email to ' + contact.name + ': ' + result.error, 'error');
           setSending(false);
           setSendingProgress(null);
           return;
@@ -216,13 +217,13 @@ const ColdMail = ({ contacts, emailsSent, onEmailSent, maxEmails }) => {
         }
       }
 
-      alert('Emails sent successfully!');
+      showAlert('Emails sent successfully!', 'success');
       setSelectedContacts([]);
       setEmailContent('');
       setBusinessInfo('');
       onEmailSent();
     } catch (error) {
-      alert('Error sending emails: ' + error.message);
+      showAlert('Error sending emails: ' + error.message, 'error');
     } finally {
       setSending(false);
       setSendingProgress(null);

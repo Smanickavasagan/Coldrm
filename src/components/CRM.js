@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { showAlert } from './Alert';
 import { Plus, Edit, Trash2, Building, Mail, FileText, Search, Tag, Calendar, Clock, TrendingUp } from 'lucide-react';
 
 const CRM = ({ contacts, onContactsChange, maxContacts }) => {
@@ -57,7 +58,7 @@ const CRM = ({ contacts, onContactsChange, maxContacts }) => {
       setEditingContact(null);
       onContactsChange();
     } catch (error) {
-      alert('Error: ' + error.message);
+      showAlert('Error: ' + error.message, 'error');
     }
   };
 
