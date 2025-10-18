@@ -21,14 +21,14 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { count, error } = await supabaseClient
-    .from('email_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('enrolled')
+    .eq('id', userId)
+    .single();
   
-  console.log('Backend enrollment check - User:', userId, 'Count:', count, 'Error:', error);
-  return count === 0;
+  console.log('Backend enrollment check - User:', userId, 'Enrolled:', profile?.enrolled, 'Error:', error);
+  return profile?.enrolled !== true;
 }
 
 module.exports = async function handler(req, res) {
@@ -179,34 +179,18 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Log enrollment in email_logs table
-    const enrollmentLog = {
-      user_id: userId,
-      contact_id: null,
-      subject: 'COLDrm - Lifetime Free Access Enrollment',
-      content: 'Enrollment submission',
-      status: 'sent'
-    };
+    // Set enrolled = true in profiles table
+    const { error: enrollError } = await supabaseClient
+      .from('profiles')
+      .update({ enrolled: true })
+      .eq('id', userId);
     
-    console.log('Attempting to insert enrollment log:', enrollmentLog);
-    
-    const { data: logData, error: logError } = await supabaseClient
-      .from('email_logs')
-      .insert([enrollmentLog])
-      .select();
-    
-    console.log('Insert result - Data:', logData, 'Error:', logError);
-    
-    if (logError) {
-      console.error('Failed to log enrollment:', logError);
-      throw new Error('Failed to record enrollment: ' + logError.message);
+    if (enrollError) {
+      console.error('Failed to update enrollment status:', enrollError);
+      throw new Error('Failed to record enrollment: ' + enrollError.message);
     }
     
-    if (!logData || logData.length === 0) {
-      throw new Error('No data returned from enrollment logging');
-    }
-    
-    console.log('Enrollment logged successfully for user:', userId, 'Data:', logData);
+    console.log('Enrollment status set to true for user:', userId);
     
     res.status(200).json({ 
       success: true, 
