@@ -21,7 +21,7 @@ async function checkEnrollmentLimit(userId) {
     .select('id')
     .eq('user_id', userId)
     .eq('name', 'ENROLLMENT_FLAG')
-    .single();
+    .maybeSingle();
   
   console.log('Enrollment check for user:', userId, 'Exists:', !!contact, 'Error:', error);
   return !contact;

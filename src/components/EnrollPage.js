@@ -40,7 +40,7 @@ const EnrollPage = () => {
         .select('id')
         .eq('user_id', userId)
         .eq('name', 'ENROLLMENT_FLAG')
-        .single();
+        .maybeSingle();
       
       console.log('Frontend enrollment check - User:', userId, 'Exists:', !!contact, 'Error:', error);
       setHasEnrolled(!!contact);
