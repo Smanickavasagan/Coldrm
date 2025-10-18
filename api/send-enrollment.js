@@ -16,14 +16,15 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { count, error } = await supabaseClient
-    .from('email_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+  // Check in profiles table for enrollment flag
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('has_enrolled')
+    .eq('id', userId)
+    .single();
   
-  console.log('Enrollment check for user:', userId, 'Count:', count, 'Error:', error);
-  return count === 0;
+  console.log('Enrollment check for user:', userId, 'Profile:', profile, 'Error:', error);
+  return !profile?.has_enrolled;
 }
 
 module.exports = async function handler(req, res) {
@@ -78,7 +79,7 @@ module.exports = async function handler(req, res) {
 
     let { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('encrypted_email_password, email_configured, username, company_name')
+      .select('encrypted_email_password, email_configured, username, company_name, has_enrolled')
       .eq('id', userId)
       .single();
 
@@ -98,7 +99,8 @@ module.exports = async function handler(req, res) {
           id: userId,
           username: user.user_metadata?.username || 'User',
           company_name: user.user_metadata?.company_name || 'Company',
-          email_configured: false
+          email_configured: false,
+          has_enrolled: false
         }])
         .select()
         .single();
@@ -174,15 +176,22 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    const { data: logData, error: logError } = await supabaseClient.from('email_logs').insert([{
+    // Mark user as enrolled in profiles table
+    const { error: enrollError } = await supabaseClient
+      .from('profiles')
+      .update({ has_enrolled: true })
+      .eq('id', userId);
+    
+    console.log('Enrollment flag update result:', { enrollError, userId });
+    
+    // Also log the email for record keeping
+    await supabaseClient.from('email_logs').insert([{
       user_id: userId,
       contact_id: null,
       subject: 'COLDrm - Lifetime Free Access Enrollment',
       content: 'Enrollment submission',
       status: 'sent'
     }]);
-    
-    console.log('Email log insert result:', { logData, logError, userId });
     
     res.status(200).json({ 
       success: true, 
