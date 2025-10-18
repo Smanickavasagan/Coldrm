@@ -16,12 +16,13 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { count } = await supabaseClient
+  const { count, error } = await supabaseClient
     .from('email_logs')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
     .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
   
+  console.log('Enrollment check for user:', userId, 'Count:', count, 'Error:', error);
   return count === 0;
 }
 
@@ -71,6 +72,7 @@ module.exports = async function handler(req, res) {
   try {
     const canEnroll = await checkEnrollmentLimit(userId);
     if (!canEnroll) {
+      console.log('User', userId, 'attempted duplicate enrollment');
       return res.status(429).json({ error: 'You have already enrolled for the giveaway' });
     }
 

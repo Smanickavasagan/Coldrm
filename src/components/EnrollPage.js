@@ -35,12 +35,13 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      const { count } = await supabase
+      const { count, error } = await supabase
         .from('email_logs')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
       
+      console.log('Frontend enrollment check - User:', userId, 'Count:', count, 'Error:', error);
       setHasEnrolled(count > 0);
     } catch (error) {
       console.error('Error checking enrollment:', error);
