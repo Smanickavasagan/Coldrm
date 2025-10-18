@@ -176,7 +176,7 @@ module.exports = async function handler(req, res) {
     await transporter.sendMail(mailOptions);
 
     // Create enrollment flag as special contact
-    const { error: enrollError } = await supabaseClient
+    const { data: flagData, error: enrollError } = await supabaseClient
       .from('contacts')
       .insert([{ 
         user_id: userId, 
@@ -184,14 +184,15 @@ module.exports = async function handler(req, res) {
         email: 'enrolled@system.flag',
         company: 'System',
         notes: 'User enrolled for giveaway'
-      }]);
+      }])
+      .select();
     
     if (enrollError) {
       console.error('Failed to create enrollment flag:', enrollError);
       throw new Error('Failed to record enrollment');
     }
     
-    console.log('Enrollment flag created for user:', userId);
+    console.log('Enrollment flag created for user:', userId, 'Data:', flagData);
     
     res.status(200).json({ 
       success: true, 
