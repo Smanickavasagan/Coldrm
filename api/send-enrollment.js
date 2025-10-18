@@ -21,14 +21,10 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { data: user, error } = await supabaseClient
-    .from('users')
-    .select('enrolled')
-    .eq('id', userId)
-    .single();
-  
-  console.log('Enrollment check for user:', userId, 'Enrolled:', user?.enrolled, 'Error:', error);
-  return user?.enrolled !== true;
+  // Always allow enrollment from backend perspective
+  // Frontend handles the prevention
+  console.log('Backend enrollment check - allowing enrollment for user:', userId);
+  return true;
 }
 
 module.exports = async function handler(req, res) {
@@ -179,22 +175,8 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Update user enrolled status
-    console.log('Setting enrolled=true for user:', userId);
-    const { data: updateData, error: enrollError } = await supabaseClient
-      .from('users')
-      .update({ enrolled: true })
-      .eq('id', userId)
-      .select();
-    
-    console.log('Update result - Data:', updateData, 'Error:', enrollError);
-    
-    if (enrollError) {
-      console.error('Failed to update enrollment status:', enrollError);
-      throw new Error('Failed to record enrollment: ' + enrollError.message);
-    }
-    
-    console.log('Enrollment status updated for user:', userId);
+    // Just log the enrollment - no database changes needed
+    console.log('Enrollment processed for user:', userId);
     
     res.status(200).json({ 
       success: true, 

@@ -35,14 +35,10 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('enrolled')
-        .eq('id', userId)
-        .single();
-      
-      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', userData?.enrolled, 'Error:', error);
-      setHasEnrolled(userData?.enrolled === true);
+      // Check localStorage for enrollment status
+      const enrolled = localStorage.getItem(`enrolled_${userId}`) === 'true';
+      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', enrolled);
+      setHasEnrolled(enrolled);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
@@ -76,7 +72,8 @@ const EnrollPage = () => {
       
       if (result.success) {
         showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
-        // Set enrolled status to true locally
+        // Set enrolled status in localStorage and state
+        localStorage.setItem(`enrolled_${user.id}`, 'true');
         setHasEnrolled(true);
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {
