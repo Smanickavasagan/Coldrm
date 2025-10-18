@@ -79,7 +79,7 @@ const Dashboard = () => {
       showAlert('Error updating profile: ' + error.message, 'error');
     } else {
       showAlert('Profile updated successfully!', 'success');
-      setUserProfile({ username: profileData.username, company_name: profileData.company_name });
+      setUserProfile({ ...userProfile, username: profileData.username, company_name: profileData.company_name });
       setEditingProfile(false);
     }
   };
