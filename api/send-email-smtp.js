@@ -20,7 +20,12 @@ function sanitizeHtml(str) {
     .replace(/\//g, '&#x2F;');
 }
 
-async function checkRateLimit(userId) {
+async function checkRateLimit(userId, userEmail) {
+  const adminEmails = ['manickavasagan022@gmail.com', 'manickavasagan60@gmail.com'];
+  if (adminEmails.includes(userEmail)) {
+    return true; // Skip rate limiting for admin accounts
+  }
+  
   const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
   
   const { count } = await supabaseClient
@@ -69,7 +74,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const canSend = await checkRateLimit(userId);
+    const canSend = await checkRateLimit(userId, fromEmail);
     if (!canSend) {
       return res.status(429).json({ error: 'Rate limit exceeded. Maximum 5 emails per minute.' });
     }

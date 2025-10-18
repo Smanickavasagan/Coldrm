@@ -148,9 +148,10 @@ const Dashboard = () => {
     }
   };
 
-  const isTestAccount = user?.email === 'manickavasagan022@gmail.com';
-  const maxContacts = isTestAccount ? 999999 : 20;
-  const maxEmails = isTestAccount ? 999999 : 15;
+  const adminEmails = ['manickavasagan022@gmail.com', 'manickavasagan60@gmail.com'];
+  const isAdminAccount = user?.email && adminEmails.includes(user.email);
+  const maxContacts = isAdminAccount ? 999999 : 20;
+  const maxEmails = isAdminAccount ? 999999 : 15;
 
   const fetchContacts = async () => {
     const { data, error } = await supabase
@@ -208,7 +209,7 @@ const Dashboard = () => {
               <Users className="h-8 w-8 text-primary-500 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Total Contacts</p>
-                <p className="text-2xl font-bold text-gray-800">{contacts.length}/{isTestAccount ? '∞' : '20'}</p>
+                <p className="text-2xl font-bold text-gray-800">{contacts.length}/{isAdminAccount ? '∞' : '20'}</p>
               </div>
             </div>
           </div>
@@ -217,7 +218,7 @@ const Dashboard = () => {
               <Mail className="h-8 w-8 text-primary-500 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Emails Sent</p>
-                <p className="text-2xl font-bold text-gray-800">{emailsSent}/{isTestAccount ? '∞' : '15'}</p>
+                <p className="text-2xl font-bold text-gray-800">{emailsSent}/{isAdminAccount ? '∞' : '15'}</p>
               </div>
             </div>
           </div>
