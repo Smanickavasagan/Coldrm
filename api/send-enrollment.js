@@ -121,7 +121,7 @@ module.exports = async function handler(req, res) {
 
     const decryptedPassword = decrypt(profile.encrypted_email_password);
 
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: userEmail,
