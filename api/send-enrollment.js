@@ -16,14 +16,14 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { count, error } = await supabaseClient
-    .from('email_logs')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('enrolled')
+    .eq('id', userId)
+    .single();
   
-  console.log('Enrollment check for user:', userId, 'Count:', count, 'Error:', error);
-  return count === 0;
+  console.log('Enrollment check for user:', userId, 'Enrolled:', profile?.enrolled, 'Error:', error);
+  return profile?.enrolled !== 1;
 }
 
 module.exports = async function handler(req, res) {
@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
 
     let { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('encrypted_email_password, email_configured, username, company_name')
+      .select('encrypted_email_password, email_configured, username, company_name, enrolled')
       .eq('id', userId)
       .single();
 
@@ -98,7 +98,8 @@ module.exports = async function handler(req, res) {
           id: userId,
           username: user.user_metadata?.username || 'User',
           company_name: user.user_metadata?.company_name || 'Company',
-          email_configured: false
+          email_configured: false,
+          enrolled: 0
         }])
         .select()
         .single();
@@ -174,20 +175,18 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    const { data: logData, error: logError } = await supabaseClient.from('email_logs').insert([{
-      user_id: userId,
-      contact_id: null,
-      subject: 'COLDrm - Lifetime Free Access Enrollment',
-      content: 'Enrollment submission',
-      status: 'sent'
-    }]);
+    // Set enrolled = 1 in profiles table
+    const { error: enrollError } = await supabaseClient
+      .from('profiles')
+      .update({ enrolled: 1 })
+      .eq('id', userId);
     
-    if (logError) {
-      console.error('Failed to log enrollment:', logError);
+    if (enrollError) {
+      console.error('Failed to update enrollment status:', enrollError);
       throw new Error('Failed to record enrollment');
     }
     
-    console.log('Email log insert result:', { logData, logError, userId });
+    console.log('Enrollment status updated for user:', userId);
     
     res.status(200).json({ 
       success: true, 

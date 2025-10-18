@@ -35,14 +35,14 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      const { count, error } = await supabase
-        .from('email_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('enrolled')
+        .eq('id', userId)
+        .single();
       
-      console.log('Frontend enrollment check - User:', userId, 'Count:', count, 'Error:', error);
-      setHasEnrolled(count > 0);
+      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', profile?.enrolled, 'Error:', error);
+      setHasEnrolled(profile?.enrolled === 1);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
@@ -118,10 +118,10 @@ const EnrollPage = () => {
             <div className="text-center py-8">
               <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold text-green-800 mb-2">
-                  ✅ Already Enrolled!
+                  🙏 Thank you for enrolling!
                 </h3>
                 <p className="text-green-700">
-                  You have already submitted your enrollment for the lifetime free access giveaway. 
+                  Your enrollment for the lifetime free access giveaway has been submitted successfully. 
                   Winners will be announced during the launch.
                 </p>
               </div>

@@ -44,7 +44,8 @@ const Dashboard = () => {
           id: user.id,
           username: user.user_metadata?.username || 'User',
           company_name: user.user_metadata?.company_name || 'Company',
-          email_configured: false
+          email_configured: false,
+          enrolled: 0
         }]);
 
       if (createError) {
