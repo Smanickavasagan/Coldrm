@@ -9,6 +9,8 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [companyName, setCompanyName] = useState('');
+  const [notifyFullVersion, setNotifyFullVersion] = useState(true);
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -33,6 +35,8 @@ const Auth = () => {
             data: {
               username: username,
               company_name: companyName,
+              notify_full_version: notifyFullVersion,
+              referral_code: referralCode.trim().toUpperCase() || null,
             }
           }
         });
@@ -141,6 +145,34 @@ const Auth = () => {
                       required
                     />
                   </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Referral Code (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 text-center font-mono"
+                    placeholder="Enter referral code for bonus"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Get +5 emails & +5 contacts with a valid referral code
+                  </p>
+                </div>
+                <div>
+                  <label className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={notifyFullVersion}
+                      onChange={(e) => setNotifyFullVersion(e.target.checked)}
+                      className="h-4 w-4 text-primary-500 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Notify me when the Full version Release
+                    </span>
+                  </label>
                 </div>
               </>
             )}
