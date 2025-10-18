@@ -77,7 +77,9 @@ const EnrollPage = () => {
       
       if (result.success) {
         showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
-        navigate('/dashboard');
+        // Refresh enrollment status
+        await checkEnrollmentStatus(user.id);
+        setTimeout(() => navigate('/dashboard'), 2000);
       } else {
         showAlert('Error: ' + (result.error || 'Please try again.'), 'error');
       }
