@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Users, Mail, LogOut, Home } from 'lucide-react';
+import { showAlert } from './Alert';
+import { Users, Mail, LogOut, Home, User } from 'lucide-react';
 import CRM from './CRM';
 import ColdMail from './ColdMail';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('crm');
+  const [activeTab, setActiveTab] = useState('profile');
   const [contacts, setContacts] = useState([]);
   const [emailsSent, setEmailsSent] = useState(0);
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({ username: '', company_name: '' });
 
   useEffect(() => {
     const initDashboard = async () => {
@@ -26,6 +30,43 @@ const Dashboard = () => {
     if (user) {
       setUser(user);
       await ensureProfile(user);
+      await getUserProfile(user.id);
+    }
+  };
+
+  const getUserProfile = async (userId) => {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('username, company_name')
+      .eq('id', userId)
+      .single();
+    
+    if (!error && profile) {
+      setUserProfile(profile);
+      setProfileData({ username: profile.username || '', company_name: profile.company_name || '' });
+    }
+  };
+
+  const updateProfile = async () => {
+    if (!profileData.username.trim() || !profileData.company_name.trim()) {
+      showAlert('Please fill in both name and company', 'warning');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        username: profileData.username.trim(),
+        company_name: profileData.company_name.trim()
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      showAlert('Error updating profile: ' + error.message, 'error');
+    } else {
+      showAlert('Profile updated successfully!', 'success');
+      setUserProfile({ username: profileData.username, company_name: profileData.company_name });
+      setEditingProfile(false);
     }
   };
 
@@ -133,6 +174,16 @@ const Dashboard = () => {
           <div className="border-b">
             <nav className="flex">
               <button
+                onClick={() => setActiveTab('profile')}
+                className={`px-6 py-4 text-sm font-medium ${
+                  activeTab === 'profile'
+                    ? 'border-b-2 border-primary-500 text-primary-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Profile
+              </button>
+              <button
                 onClick={() => setActiveTab('crm')}
                 className={`px-6 py-4 text-sm font-medium ${
                   activeTab === 'crm'
@@ -156,6 +207,81 @@ const Dashboard = () => {
           </div>
 
           <div className="p-6">
+            {activeTab === 'profile' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800">Profile Settings</h2>
+                  <button
+                    onClick={() => setEditingProfile(!editingProfile)}
+                    className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition flex items-center"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    {editingProfile ? 'Cancel' : 'Edit Profile'}
+                  </button>
+                </div>
+
+                {editingProfile ? (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input
+                          type="text"
+                          value={profileData.username}
+                          onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="Enter your name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+                        <input
+                          type="text"
+                          value={profileData.company_name}
+                          onChange={(e) => setProfileData({...profileData, company_name: e.target.value})}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                          placeholder="Enter your company name"
+                        />
+                      </div>
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={updateProfile}
+                          className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition"
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingProfile(false);
+                            setProfileData({ username: userProfile?.username || '', company_name: userProfile?.company_name || '' });
+                          }}
+                          className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-6 rounded-lg">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <p className="text-gray-900 text-lg">{userProfile?.username || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                        <p className="text-gray-900 text-lg">{userProfile?.company_name || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <p className="text-gray-900 text-lg">{user?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {activeTab === 'crm' && (
               <CRM 
                 contacts={contacts} 
