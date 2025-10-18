@@ -21,10 +21,14 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  // Always allow enrollment from backend perspective
-  // Frontend handles the prevention
-  console.log('Backend enrollment check - allowing enrollment for user:', userId);
-  return true;
+  const { count, error } = await supabaseClient
+    .from('email_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+  
+  console.log('Backend enrollment check - User:', userId, 'Count:', count, 'Error:', error);
+  return count === 0;
 }
 
 module.exports = async function handler(req, res) {
@@ -175,8 +179,23 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Just log the enrollment - no database changes needed
-    console.log('Enrollment processed for user:', userId);
+    // Log enrollment in email_logs table
+    const { error: logError } = await supabaseClient
+      .from('email_logs')
+      .insert([{
+        user_id: userId,
+        contact_id: null,
+        subject: 'COLDrm - Lifetime Free Access Enrollment',
+        content: 'Enrollment submission',
+        status: 'sent'
+      }]);
+    
+    if (logError) {
+      console.error('Failed to log enrollment:', logError);
+      throw new Error('Failed to record enrollment');
+    }
+    
+    console.log('Enrollment logged for user:', userId);
     
     res.status(200).json({ 
       success: true, 

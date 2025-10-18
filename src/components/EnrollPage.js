@@ -35,10 +35,14 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      // Check localStorage for enrollment status
-      const enrolled = localStorage.getItem(`enrolled_${userId}`) === 'true';
-      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', enrolled);
-      setHasEnrolled(enrolled);
+      const { count, error } = await supabase
+        .from('email_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+      
+      console.log('Frontend enrollment check - User:', userId, 'Count:', count, 'Error:', error);
+      setHasEnrolled(count > 0);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
@@ -72,8 +76,7 @@ const EnrollPage = () => {
       
       if (result.success) {
         showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
-        // Set enrolled status in localStorage and state
-        localStorage.setItem(`enrolled_${user.id}`, 'true');
+        // Set enrolled status locally
         setHasEnrolled(true);
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {
