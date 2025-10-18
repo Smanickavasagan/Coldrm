@@ -13,14 +13,44 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    getUser();
-    fetchContacts();
-    fetchEmailCount();
+    const initDashboard = async () => {
+      await getUser();
+      fetchContacts();
+      fetchEmailCount();
+    };
+    initDashboard();
   }, []);
 
   const getUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
+    if (user) {
+      setUser(user);
+      await ensureProfile(user);
+    }
+  };
+
+  const ensureProfile = async (user) => {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    // If profile doesn't exist, create it
+    if (error && error.code === 'PGRST116') {
+      const { error: createError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: user.id,
+          username: user.user_metadata?.username || 'User',
+          company_name: user.user_metadata?.company_name || 'Company',
+          email_configured: false
+        }]);
+
+      if (createError) {
+        console.error('Failed to create profile:', createError);
+      }
+    }
   };
 
   const isTestAccount = user?.email === 'manickavasagan022@gmail.com';

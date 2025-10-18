@@ -3,8 +3,8 @@ const { createClient } = require('@supabase/supabase-js');
 const { decrypt } = require('./crypto-utils');
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-const supabaseClient = createClient(supabaseUrl, supabaseKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
 
 function sanitizeHtml(str) {
   return str
@@ -77,15 +77,42 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'You can only enroll once per 24 hours' });
     }
 
-    const { data: profile, error: profileError } = await supabaseClient
+    let { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('encrypted_email_password, email_configured')
+      .select('encrypted_email_password, email_configured, username, company_name')
       .eq('id', userId)
       .single();
 
-    if (profileError) {
+    // If profile doesn't exist, create it
+    if (profileError && profileError.code === 'PGRST116') {
+      // Get user metadata from auth
+      const { data: { user }, error: userError } = await supabaseClient.auth.admin.getUserById(userId);
+      if (userError) {
+        console.error('User fetch error:', userError);
+        return res.status(400).json({ error: 'User not found. Please try logging out and back in.' });
+      }
+
+      // Create profile with user metadata
+      const { data: newProfile, error: createError } = await supabaseClient
+        .from('profiles')
+        .insert([{
+          id: userId,
+          username: user.user_metadata?.username || 'User',
+          company_name: user.user_metadata?.company_name || 'Company',
+          email_configured: false
+        }])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Profile creation error:', createError);
+        return res.status(500).json({ error: 'Failed to create user profile.' });
+      }
+
+      profile = newProfile;
+    } else if (profileError) {
       console.error('Profile fetch error:', profileError);
-      return res.status(400).json({ error: 'User profile not found. Please try logging out and back in.' });
+      return res.status(400).json({ error: 'Database error. Please try again.' });
     }
 
     if (!profile?.encrypted_email_password || !profile?.email_configured) {
