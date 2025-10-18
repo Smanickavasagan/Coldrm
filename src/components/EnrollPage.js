@@ -55,10 +55,11 @@ const EnrollPage = () => {
         alert('Enrollment submitted successfully! We will contact you soon.');
         navigate('/dashboard');
       } else {
-        alert('Error submitting enrollment. Please try again.');
+        alert('Error: ' + (result.error || 'Please try again.'));
       }
     } catch (error) {
-      alert('Error: ' + error.message);
+      console.error('Enrollment error:', error);
+      alert('Network error: ' + error.message);
     } finally {
       setLoading(false);
     }

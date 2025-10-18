@@ -77,13 +77,18 @@ module.exports = async function handler(req, res) {
       return res.status(429).json({ error: 'You can only enroll once per 24 hours' });
     }
 
-    const { data: profile, error } = await supabaseClient
+    const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('encrypted_email_password')
+      .select('encrypted_email_password, email_configured')
       .eq('id', userId)
       .single();
 
-    if (error || !profile?.encrypted_email_password) {
+    if (profileError) {
+      console.error('Profile fetch error:', profileError);
+      return res.status(400).json({ error: 'User profile not found. Please try logging out and back in.' });
+    }
+
+    if (!profile?.encrypted_email_password || !profile?.email_configured) {
       return res.status(400).json({ error: 'Email not configured. Please set up your Gmail in dashboard first.' });
     }
 
@@ -159,7 +164,7 @@ module.exports = async function handler(req, res) {
     console.error('Enrollment email error:', error);
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to submit enrollment' 
+      error: error.message || 'Failed to submit enrollment' 
     });
   }
 }
