@@ -16,14 +16,14 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { data: profile, error } = await supabaseClient
-    .from('profiles')
-    .select('enrolled')
-    .eq('id', userId)
+  const { data: enrollment, error } = await supabaseClient
+    .from('enrollments')
+    .select('id')
+    .eq('user_id', userId)
     .single();
   
-  console.log('Enrollment check for user:', userId, 'Enrolled:', profile?.enrolled, 'Error:', error);
-  return profile?.enrolled !== 1;
+  console.log('Enrollment check for user:', userId, 'Exists:', !!enrollment, 'Error:', error);
+  return !enrollment;
 }
 
 module.exports = async function handler(req, res) {
@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
 
     let { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('encrypted_email_password, email_configured, username, company_name, enrolled')
+      .select('encrypted_email_password, email_configured, username, company_name')
       .eq('id', userId)
       .single();
 
@@ -98,8 +98,7 @@ module.exports = async function handler(req, res) {
           id: userId,
           username: user.user_metadata?.username || 'User',
           company_name: user.user_metadata?.company_name || 'Company',
-          email_configured: false,
-          enrolled: 0
+          email_configured: false
         }])
         .select()
         .single();
@@ -175,18 +174,17 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Set enrolled = 1 in profiles table
+    // Create enrollment record
     const { error: enrollError } = await supabaseClient
-      .from('profiles')
-      .update({ enrolled: 1 })
-      .eq('id', userId);
+      .from('enrollments')
+      .insert([{ user_id: userId }]);
     
     if (enrollError) {
-      console.error('Failed to update enrollment status:', enrollError);
+      console.error('Failed to create enrollment record:', enrollError);
       throw new Error('Failed to record enrollment');
     }
     
-    console.log('Enrollment status updated for user:', userId);
+    console.log('Enrollment record created for user:', userId);
     
     res.status(200).json({ 
       success: true, 

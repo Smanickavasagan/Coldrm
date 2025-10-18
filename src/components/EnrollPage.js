@@ -35,14 +35,14 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('enrolled')
-        .eq('id', userId)
+      const { data: enrollment, error } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('user_id', userId)
         .single();
       
-      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', profile?.enrolled, 'Error:', error);
-      setHasEnrolled(profile?.enrolled === 1);
+      console.log('Frontend enrollment check - User:', userId, 'Exists:', !!enrollment, 'Error:', error);
+      setHasEnrolled(!!enrollment);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
