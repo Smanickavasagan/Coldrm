@@ -16,14 +16,15 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { data: enrollment, error } = await supabaseClient
-    .from('enrollments')
+  const { data: contact, error } = await supabaseClient
+    .from('contacts')
     .select('id')
     .eq('user_id', userId)
+    .eq('name', 'ENROLLMENT_FLAG')
     .single();
   
-  console.log('Enrollment check for user:', userId, 'Exists:', !!enrollment, 'Error:', error);
-  return !enrollment;
+  console.log('Enrollment check for user:', userId, 'Exists:', !!contact, 'Error:', error);
+  return !contact;
 }
 
 module.exports = async function handler(req, res) {
@@ -174,17 +175,23 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Create enrollment record
+    // Create enrollment flag as special contact
     const { error: enrollError } = await supabaseClient
-      .from('enrollments')
-      .insert([{ user_id: userId }]);
+      .from('contacts')
+      .insert([{ 
+        user_id: userId, 
+        name: 'ENROLLMENT_FLAG',
+        email: 'enrolled@system.flag',
+        company: 'System',
+        notes: 'User enrolled for giveaway'
+      }]);
     
     if (enrollError) {
-      console.error('Failed to create enrollment record:', enrollError);
+      console.error('Failed to create enrollment flag:', enrollError);
       throw new Error('Failed to record enrollment');
     }
     
-    console.log('Enrollment record created for user:', userId);
+    console.log('Enrollment flag created for user:', userId);
     
     res.status(200).json({ 
       success: true, 
