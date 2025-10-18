@@ -21,15 +21,14 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const { data: contact, error } = await supabaseClient
-    .from('contacts')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('name', 'ENROLLMENT_FLAG')
-    .maybeSingle();
+  const { data: user, error } = await supabaseClient
+    .from('users')
+    .select('enrolled')
+    .eq('id', userId)
+    .single();
   
-  console.log('Enrollment check for user:', userId, 'Exists:', !!contact, 'Error:', error);
-  return !contact;
+  console.log('Enrollment check for user:', userId, 'Enrolled:', user?.enrolled, 'Error:', error);
+  return user?.enrolled !== true;
 }
 
 module.exports = async function handler(req, res) {
@@ -180,33 +179,22 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    // Create enrollment flag as special contact
-    console.log('Attempting to create enrollment flag for user:', userId);
-    const { data: flagData, error: enrollError } = await supabaseClient
-      .from('contacts')
-      .insert([{ 
-        user_id: userId, 
-        name: 'ENROLLMENT_FLAG',
-        email: 'enrolled@system.flag',
-        company: 'System',
-        notes: 'User enrolled for giveaway',
-        status: 'lead'
-      }])
+    // Update user enrolled status
+    console.log('Setting enrolled=true for user:', userId);
+    const { data: updateData, error: enrollError } = await supabaseClient
+      .from('users')
+      .update({ enrolled: true })
+      .eq('id', userId)
       .select();
     
-    console.log('Insert result - Data:', flagData, 'Error:', enrollError);
+    console.log('Update result - Data:', updateData, 'Error:', enrollError);
     
     if (enrollError) {
-      console.error('Failed to create enrollment flag:', enrollError);
+      console.error('Failed to update enrollment status:', enrollError);
       throw new Error('Failed to record enrollment: ' + enrollError.message);
     }
     
-    if (!flagData || flagData.length === 0) {
-      console.error('No data returned from enrollment flag creation');
-      throw new Error('Failed to create enrollment record');
-    }
-    
-    console.log('Enrollment flag created successfully for user:', userId, 'Data:', flagData);
+    console.log('Enrollment status updated for user:', userId);
     
     res.status(200).json({ 
       success: true, 

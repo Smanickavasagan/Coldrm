@@ -35,15 +35,14 @@ const EnrollPage = () => {
 
   const checkEnrollmentStatus = async (userId) => {
     try {
-      const { data: contact, error } = await supabase
-        .from('contacts')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('name', 'ENROLLMENT_FLAG')
-        .maybeSingle();
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('enrolled')
+        .eq('id', userId)
+        .single();
       
-      console.log('Frontend enrollment check - User:', userId, 'Exists:', !!contact, 'Error:', error);
-      setHasEnrolled(!!contact);
+      console.log('Frontend enrollment check - User:', userId, 'Enrolled:', userData?.enrolled, 'Error:', error);
+      setHasEnrolled(userData?.enrolled === true);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
@@ -77,8 +76,8 @@ const EnrollPage = () => {
       
       if (result.success) {
         showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
-        // Refresh enrollment status
-        await checkEnrollmentStatus(user.id);
+        // Set enrolled status to true locally
+        setHasEnrolled(true);
         setTimeout(() => navigate('/dashboard'), 2000);
       } else {
         showAlert('Error: ' + (result.error || 'Please try again.'), 'error');
