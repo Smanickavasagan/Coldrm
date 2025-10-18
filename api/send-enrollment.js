@@ -174,13 +174,15 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail(mailOptions);
 
-    await supabaseClient.from('email_logs').insert([{
+    const { data: logData, error: logError } = await supabaseClient.from('email_logs').insert([{
       user_id: userId,
       contact_id: null,
       subject: 'COLDrm - Lifetime Free Access Enrollment',
       content: 'Enrollment submission',
       status: 'sent'
     }]);
+    
+    console.log('Email log insert result:', { logData, logError, userId });
     
     res.status(200).json({ 
       success: true, 
