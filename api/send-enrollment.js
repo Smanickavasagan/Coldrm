@@ -180,22 +180,33 @@ module.exports = async function handler(req, res) {
     await transporter.sendMail(mailOptions);
 
     // Log enrollment in email_logs table
-    const { error: logError } = await supabaseClient
+    const enrollmentLog = {
+      user_id: userId,
+      contact_id: null,
+      subject: 'COLDrm - Lifetime Free Access Enrollment',
+      content: 'Enrollment submission',
+      status: 'sent'
+    };
+    
+    console.log('Attempting to insert enrollment log:', enrollmentLog);
+    
+    const { data: logData, error: logError } = await supabaseClient
       .from('email_logs')
-      .insert([{
-        user_id: userId,
-        contact_id: null,
-        subject: 'COLDrm - Lifetime Free Access Enrollment',
-        content: 'Enrollment submission',
-        status: 'sent'
-      }]);
+      .insert([enrollmentLog])
+      .select();
+    
+    console.log('Insert result - Data:', logData, 'Error:', logError);
     
     if (logError) {
       console.error('Failed to log enrollment:', logError);
-      throw new Error('Failed to record enrollment');
+      throw new Error('Failed to record enrollment: ' + logError.message);
     }
     
-    console.log('Enrollment logged for user:', userId);
+    if (!logData || logData.length === 0) {
+      throw new Error('No data returned from enrollment logging');
+    }
+    
+    console.log('Enrollment logged successfully for user:', userId, 'Data:', logData);
     
     res.status(200).json({ 
       success: true, 
