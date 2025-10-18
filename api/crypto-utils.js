@@ -21,6 +21,10 @@ function encrypt(text) {
   if (text.length > 1000) {
     throw new Error('Text too long to encrypt');
   }
+  // Sanitize input to prevent injection
+  if (!/^[a-zA-Z0-9\s\-_@.!#$%&*+=?^`{|}~]+$/.test(text)) {
+    throw new Error('Invalid characters in text');
+  }
   const key = getKey();
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(algorithm, key, iv);
@@ -32,6 +36,10 @@ function encrypt(text) {
 function decrypt(text) {
   if (!text || typeof text !== 'string') {
     throw new Error('Invalid encrypted text');
+  }
+  // Validate format before processing
+  if (!/^[a-fA-F0-9]+:[a-fA-F0-9]+$/.test(text)) {
+    throw new Error('Invalid encrypted format');
   }
   const key = getKey();
   const parts = text.split(':');

@@ -68,7 +68,7 @@ module.exports = async function handler(req, res) {
   if (subject.length > 200) return res.status(400).json({ error: 'Subject too long' });
   if (content.length > 10000) return res.status(400).json({ error: 'Content too long' });
 
-  const emailRegex = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$');
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
   if (!emailRegex.test(to) || !emailRegex.test(fromEmail)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }

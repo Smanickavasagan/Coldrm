@@ -22,7 +22,7 @@ const response = await fetch('/api/get-notification-users', {
   headers: { 'X-Requested-With': 'XMLHttpRequest' }
 });
 const data = await response.json();
-console.log(`${data.count} users want notifications:`, data.users);
+// data.users contains the notification users
 ```
 
 ### Quick Count:

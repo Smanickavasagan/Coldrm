@@ -48,11 +48,8 @@ const Dashboard = () => {
       .single();
     
     if (!error && profile) {
-      console.log('Profile data:', profile); // Debug log
       setUserProfile(profile);
       setProfileData({ username: profile.username || '', company_name: profile.company_name || '' });
-    } else {
-      console.error('Profile fetch error:', error);
     }
   };
 
@@ -115,17 +112,13 @@ const Dashboard = () => {
 
       if (updateError) {
         showAlert('Error updating password: ' + updateError.message, 'error');
-        console.error('Password update error:', updateError);
       } else {
         showAlert('Password updated successfully! Please log in with your new password.', 'success');
         setChangingPassword(false);
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        // Optional: Auto logout to force re-login with new password
-        // setTimeout(() => handleLogout(), 2000);
       }
     } catch (error) {
       showAlert('Error changing password: ' + error.message, 'error');
-      console.error('Password change error:', error);
     }
   };
 
@@ -176,7 +169,7 @@ const Dashboard = () => {
             referredBy = usedReferralCode;
           }
         } catch (error) {
-          console.error('Referral processing failed:', error);
+          // Referral processing failed silently
         }
       }
 
@@ -195,7 +188,7 @@ const Dashboard = () => {
         }]);
 
       if (createError) {
-        console.error('Failed to create profile:', createError);
+        // Profile creation failed
       }
     }
   };
@@ -238,7 +231,8 @@ const Dashboard = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': 'coldrm-csrf-token'
         },
         body: JSON.stringify({
           userEmail: user?.email,
