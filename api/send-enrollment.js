@@ -16,14 +16,11 @@ function sanitizeHtml(str) {
 }
 
 async function checkEnrollmentLimit(userId) {
-  const oneDayAgo = new Date(Date.now() - 86400000).toISOString();
-  
   const { count } = await supabaseClient
     .from('email_logs')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', userId)
-    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment')
-    .gte('sent_at', oneDayAgo);
+    .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
   
   return count === 0;
 }
@@ -74,7 +71,7 @@ module.exports = async function handler(req, res) {
   try {
     const canEnroll = await checkEnrollmentLimit(userId);
     if (!canEnroll) {
-      return res.status(429).json({ error: 'You can only enroll once per 24 hours' });
+      return res.status(429).json({ error: 'You have already enrolled for the giveaway' });
     }
 
     let { data: profile, error: profileError } = await supabaseClient

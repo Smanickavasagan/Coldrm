@@ -7,6 +7,8 @@ const EnrollPage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [hasEnrolled, setHasEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,6 +28,23 @@ const EnrollPage = () => {
     } else {
       setUser(user);
       setFormData(prev => ({ ...prev, email: user.email }));
+      await checkEnrollmentStatus(user.id);
+    }
+  };
+
+  const checkEnrollmentStatus = async (userId) => {
+    try {
+      const { count } = await supabase
+        .from('email_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('subject', 'COLDrm - Lifetime Free Access Enrollment');
+      
+      setHasEnrolled(count > 0);
+    } catch (error) {
+      console.error('Error checking enrollment:', error);
+    } finally {
+      setCheckingEnrollment(false);
     }
   };
 
@@ -88,6 +107,30 @@ const EnrollPage = () => {
               15 random users will get lifetime free access to COLDrm Premium
             </p>
           </div>
+
+          {checkingEnrollment ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600">Checking enrollment status...</p>
+            </div>
+          ) : hasEnrolled ? (
+            <div className="text-center py-8">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-semibold text-green-800 mb-2">
+                  ✅ Already Enrolled!
+                </h3>
+                <p className="text-green-700">
+                  You have already submitted your enrollment for the lifetime free access giveaway. 
+                  Winners will be announced during the launch.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="bg-primary-500 text-white px-6 py-3 rounded-lg hover:bg-primary-600 transition"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          ) : (
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -161,6 +204,7 @@ const EnrollPage = () => {
               {loading ? 'Submitting...' : 'Enroll for Free Access'}
             </button>
           </form>
+          )}
         </div>
       </div>
     </div>
