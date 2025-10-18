@@ -43,21 +43,16 @@ const Dashboard = () => {
   const getUserProfile = async (userId) => {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select(`
-        username, 
-        company_name, 
-        referral_code, 
-        referred_by, 
-        bonus_contacts, 
-        bonus_emails,
-        referrer:profiles!referred_by(username)
-      `)
+      .select('*')
       .eq('id', userId)
       .single();
     
     if (!error && profile) {
+      console.log('Profile data:', profile); // Debug log
       setUserProfile(profile);
       setProfileData({ username: profile.username || '', company_name: profile.company_name || '' });
+    } else {
+      console.error('Profile fetch error:', error);
     }
   };
 
@@ -79,8 +74,9 @@ const Dashboard = () => {
       showAlert('Error updating profile: ' + error.message, 'error');
     } else {
       showAlert('Profile updated successfully!', 'success');
-      setUserProfile({ ...userProfile, username: profileData.username, company_name: profileData.company_name });
       setEditingProfile(false);
+      // Refresh profile data from database
+      await getUserProfile(user.id);
     }
   };
 
@@ -101,6 +97,7 @@ const Dashboard = () => {
     }
 
     try {
+      // First verify current password by attempting to sign in
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: passwordData.currentPassword
@@ -111,19 +108,24 @@ const Dashboard = () => {
         return;
       }
 
+      // Update password
       const { error: updateError } = await supabase.auth.updateUser({
         password: passwordData.newPassword
       });
 
       if (updateError) {
         showAlert('Error updating password: ' + updateError.message, 'error');
+        console.error('Password update error:', updateError);
       } else {
-        showAlert('Password updated successfully!', 'success');
+        showAlert('Password updated successfully! Please log in with your new password.', 'success');
         setChangingPassword(false);
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        // Optional: Auto logout to force re-login with new password
+        // setTimeout(() => handleLogout(), 2000);
       }
     } catch (error) {
       showAlert('Error changing password: ' + error.message, 'error');
+      console.error('Password change error:', error);
     }
   };
 
@@ -386,13 +388,21 @@ const Dashboard = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-800">Profile Settings</h2>
-                  <button
-                    onClick={() => setEditingProfile(!editingProfile)}
-                    className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition flex items-center"
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    {editingProfile ? 'Cancel' : 'Edit Profile'}
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => getUserProfile(user.id)}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition"
+                    >
+                      Refresh
+                    </button>
+                    <button
+                      onClick={() => setEditingProfile(!editingProfile)}
+                      className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition flex items-center"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      {editingProfile ? 'Cancel' : 'Edit Profile'}
+                    </button>
+                  </div>
                 </div>
 
                 {editingProfile ? (
