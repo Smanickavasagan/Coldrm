@@ -4,7 +4,12 @@ const { decrypt } = require('./crypto-utils');
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseClient = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
 function sanitizeHtml(str) {
   return str
@@ -176,6 +181,7 @@ module.exports = async function handler(req, res) {
     await transporter.sendMail(mailOptions);
 
     // Create enrollment flag as special contact
+    console.log('Attempting to create enrollment flag for user:', userId);
     const { data: flagData, error: enrollError } = await supabaseClient
       .from('contacts')
       .insert([{ 
@@ -183,16 +189,24 @@ module.exports = async function handler(req, res) {
         name: 'ENROLLMENT_FLAG',
         email: 'enrolled@system.flag',
         company: 'System',
-        notes: 'User enrolled for giveaway'
+        notes: 'User enrolled for giveaway',
+        status: 'lead'
       }])
       .select();
     
+    console.log('Insert result - Data:', flagData, 'Error:', enrollError);
+    
     if (enrollError) {
       console.error('Failed to create enrollment flag:', enrollError);
-      throw new Error('Failed to record enrollment');
+      throw new Error('Failed to record enrollment: ' + enrollError.message);
     }
     
-    console.log('Enrollment flag created for user:', userId, 'Data:', flagData);
+    if (!flagData || flagData.length === 0) {
+      console.error('No data returned from enrollment flag creation');
+      throw new Error('Failed to create enrollment record');
+    }
+    
+    console.log('Enrollment flag created successfully for user:', userId, 'Data:', flagData);
     
     res.status(200).json({ 
       success: true, 
