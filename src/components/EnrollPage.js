@@ -71,7 +71,9 @@ const EnrollPage = () => {
         credentials: 'same-origin'
       });
 
+      console.log('Enrollment API response status:', response.status);
       const result = await response.json();
+      console.log('Enrollment API result:', result);
       
       if (result.success) {
         showAlert('Enrollment submitted successfully! We will contact you soon.', 'success');
@@ -80,7 +82,7 @@ const EnrollPage = () => {
         showAlert('Error: ' + (result.error || 'Please try again.'), 'error');
       }
     } catch (error) {
-      console.error('Enrollment error:', error);
+      console.error('Enrollment network error:', error);
       showAlert('Network error: ' + error.message, 'error');
     } finally {
       setLoading(false);
