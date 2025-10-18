@@ -60,7 +60,8 @@ const EnrollPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRF-Token': 'coldrm-csrf-token'
         },
         body: JSON.stringify({
           ...formData,

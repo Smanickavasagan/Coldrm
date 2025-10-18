@@ -3,7 +3,10 @@ const { createClient } = require('@supabase/supabase-js');
 const { decrypt } = require('./crypto-utils');
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required');
+}
 const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
 function sanitizeHtml(str) {
@@ -42,7 +45,8 @@ module.exports = async function handler(req, res) {
   }
   
   const requestedWith = req.headers['x-requested-with'];
-  if (requestedWith !== 'XMLHttpRequest') {
+  const csrfToken = req.headers['x-csrf-token'];
+  if (requestedWith !== 'XMLHttpRequest' || csrfToken !== 'coldrm-csrf-token') {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -59,7 +63,7 @@ module.exports = async function handler(req, res) {
   if (subject.length > 200) return res.status(400).json({ error: 'Subject too long' });
   if (content.length > 10000) return res.status(400).json({ error: 'Content too long' });
 
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const emailRegex = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$');
   if (!emailRegex.test(to) || !emailRegex.test(fromEmail)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
@@ -153,7 +157,7 @@ module.exports = async function handler(req, res) {
             <p>Best regards,<br>
             ${safeName}<br>
             ${safeCompany}<br>
-            ${fromEmail}</p>
+            ${sanitizeHtml(fromEmail)}</p>
           </div>
         </div>
       `,

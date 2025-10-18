@@ -13,7 +13,8 @@ module.exports = async function handler(req, res) {
   }
   
   const requestedWith = req.headers['x-requested-with'];
-  if (requestedWith !== 'XMLHttpRequest') {
+  const csrfToken = req.headers['x-csrf-token'];
+  if (requestedWith !== 'XMLHttpRequest' || csrfToken !== 'coldrm-csrf-token') {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

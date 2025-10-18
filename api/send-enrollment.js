@@ -4,6 +4,9 @@ const { decrypt } = require('./crypto-utils');
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing required environment variables');
+}
 const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -44,7 +47,8 @@ module.exports = async function handler(req, res) {
   }
   
   const requestedWith = req.headers['x-requested-with'];
-  if (requestedWith !== 'XMLHttpRequest') {
+  const csrfToken = req.headers['x-csrf-token'];
+  if (requestedWith !== 'XMLHttpRequest' || csrfToken !== 'coldrm-csrf-token') {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -69,7 +73,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid userEmail' });
   }
 
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const emailRegex = new RegExp('^[a-zA-Z0-9.!#$%&\'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$');
   if (!emailRegex.test(email) || !emailRegex.test(userEmail)) {
     return res.status(400).json({ error: 'Invalid email format' });
   }
