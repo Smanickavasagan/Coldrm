@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { showAlert } from './Alert';
-import { Users, Mail, LogOut, Home, User } from 'lucide-react';
+import { Users, Mail, LogOut, Home, User, Lock, Key } from 'lucide-react';
 import CRM from './CRM';
 import ColdMail from './ColdMail';
 
@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileData, setProfileData] = useState({ username: '', company_name: '' });
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
 
   useEffect(() => {
     const initDashboard = async () => {
@@ -67,6 +69,58 @@ const Dashboard = () => {
       showAlert('Profile updated successfully!', 'success');
       setUserProfile({ username: profileData.username, company_name: profileData.company_name });
       setEditingProfile(false);
+    }
+  };
+
+  const changePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      showAlert('Please fill in all password fields', 'warning');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showAlert('New passwords do not match', 'error');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      showAlert('New password must be at least 6 characters', 'warning');
+      return;
+    }
+
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: passwordData.currentPassword
+      });
+
+      if (signInError) {
+        showAlert('Current password is incorrect', 'error');
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (updateError) {
+        showAlert('Error updating password: ' + updateError.message, 'error');
+      } else {
+        showAlert('Password updated successfully!', 'success');
+        setChangingPassword(false);
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      }
+    } catch (error) {
+      showAlert('Error changing password: ' + error.message, 'error');
+    }
+  };
+
+  const sendPasswordReset = async () => {
+    const { error } = await supabase.auth.resetPasswordForEmail(user.email);
+    if (error) {
+      showAlert('Error sending reset email: ' + error.message, 'error');
+    } else {
+      showAlert('Password reset email sent! Check your inbox.', 'success');
     }
   };
 
@@ -277,6 +331,79 @@ const Dashboard = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <p className="text-gray-900 text-lg">{user?.email}</p>
                       </div>
+                    </div>
+                    
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h3 className="text-lg font-medium text-gray-800 mb-4">Password Settings</h3>
+                      {changingPassword ? (
+                        <div className="bg-white p-4 border rounded-lg space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                            <input
+                              type="password"
+                              value={passwordData.currentPassword}
+                              onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                              placeholder="Enter current password"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                            <input
+                              type="password"
+                              value={passwordData.newPassword}
+                              onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                              placeholder="Enter new password (min 6 characters)"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+                            <input
+                              type="password"
+                              value={passwordData.confirmPassword}
+                              onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                              placeholder="Confirm new password"
+                            />
+                          </div>
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={changePassword}
+                              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center"
+                            >
+                              <Lock className="h-4 w-4 mr-2" />
+                              Update Password
+                            </button>
+                            <button
+                              onClick={() => {
+                                setChangingPassword(false);
+                                setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                              }}
+                              className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => setChangingPassword(true)}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition flex items-center"
+                          >
+                            <Key className="h-4 w-4 mr-2" />
+                            Change Password
+                          </button>
+                          <button
+                            onClick={sendPasswordReset}
+                            className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center"
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            Forgot Password?
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
